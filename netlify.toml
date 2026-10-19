@@ -1,0 +1,9 @@
+# Webhook backend on Netlify Functions. Only `public/` is published as static files,
+# so the repository's source code is never served.
+[build]
+  publish = "public"
+  command = ""
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"

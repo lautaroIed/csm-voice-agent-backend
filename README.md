@@ -56,10 +56,22 @@ The group appears as `"chat":{"id":-100...,"title":"..."}`. The ID is negative.
 
 ## Deploy
 
-Any host that runs Node and gives a public HTTPS URL works: a small VPS behind Caddy or
-nginx, or Render, Railway or Fly.
+### Netlify (current)
 
-1. Deploy and set the environment variables.
+The webhook runs as a Netlify Function (`netlify/functions/`). `netlify.toml` publishes only
+`public/`, so the source code is never served. Every push to `main` deploys.
+
+Dedupe uses Netlify Blobs (store `delivered-calls`), because serverless instances don't share
+memory.
+
+### Any other Node host
+
+`npm start` runs the same logic as an Express server, for example on a VPS behind Caddy or nginx.
+
+### Steps
+
+1. Deploy and set the environment variables. On Netlify: **Project configuration → Environment
+   variables**, every variable from `.env.example` (`PORT` isn't needed).
 2. Check `https://<host>/health` returns `{"ok":true}`.
 3. In Retell, open the agent and set the **webhook URL** to `https://<host>/webhooks/retell`,
    or via the API:

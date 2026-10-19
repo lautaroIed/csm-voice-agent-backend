@@ -1,0 +1,11 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# conversation transcripts (contain credentials)
+*.jsonl
+
+node_modules/
+npm-debug.log*
+.DS_Store

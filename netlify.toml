@@ -4,6 +4,12 @@
   publish = "public"
   command = ""
 
+# Netlify's secret scanner compares every env var value against the code. These are plain
+# settings whose values ("email", "starttls", "Europe/Madrid", "3000") naturally appear in
+# the source. Real secrets (RETELL_API_KEY, SMTP_PASS, TELEGRAM_BOT_TOKEN) stay scanned.
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "SMTP_SECURE,SMTP_PORT,TIMEZONE,DRY_RUN,PORT"
+
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"

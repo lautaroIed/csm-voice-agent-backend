@@ -28,6 +28,32 @@ test("urgent call: flagged, falls back to caller ID and post-call summary", () =
   assert.match(toEmail(r).subject, /^\[URGENTE\]/);
 });
 
+test("extracted 'true'/'false' strings read as Sí/No", () => {
+  const call = structuredClone(normalCall);
+  call.collected_dynamic_variables.primera_vez = "true";
+  assert.equal(field(buildRecado(call), "Primera vez"), "Sí");
+  call.collected_dynamic_variables.primera_vez = "false";
+  assert.equal(field(buildRecado(call), "Primera vez"), "No");
+});
+
+test("caller ID equal to the clinic's own number is not shown as the patient's", () => {
+  // Shape of the 20/10 extension tests: PBX forwarded with the clinic number as caller ID.
+  const call = structuredClone(normalCall);
+  delete call.collected_dynamic_variables.telefono;
+  call.from_number = call.to_number = "+34857750125";
+  const r = buildRecado(call);
+  assert.equal(field(r, "Teléfono"), "No facilitado");
+  assert.equal(field(r, "Teléfono (de la llamada)"), undefined);
+});
+
+test("real caller ID is used when the person gave no number", () => {
+  const call = structuredClone(normalCall);
+  delete call.collected_dynamic_variables.telefono;
+  call.from_number = "+34664000000";
+  call.to_number = "+34857750125";
+  assert.equal(field(buildRecado(call), "Teléfono (de la llamada)"), "+34664000000");
+});
+
 test("hang-up with nothing said is skipped", () => {
   assert.equal(buildRecado(hangUpCall).worthSending, false);
 });

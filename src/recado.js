@@ -71,8 +71,9 @@ const LABELS = {
 const EMPTY = new Set(["", "null", "undefined", "none", "n/a", "ninguna", "no_indicado", "desconocido"]);
 
 export function label(value) {
-  if (value === true) return "Sí";
-  if (value === false) return "No";
+  // Retell sends extracted booleans as the strings "true" / "false".
+  if (value === true || /^true$/i.test(String(value).trim())) return "Sí";
+  if (value === false || /^false$/i.test(String(value).trim())) return "No";
   const v = String(value).trim();
   if (LABELS[v]) return LABELS[v];
   if (/^[a-z]+(_[a-z]+)*$/.test(v)) {
@@ -101,9 +102,13 @@ export function buildRecado(call, { timezone = "Europe/Madrid" } = {}) {
     .filter(([key]) => present(vars[key]))
     .map(([key, name]) => [name, label(vars[key])]);
 
-  // The caller ID is the fallback when the person never gave a number.
-  if (!present(vars.telefono) && present(call.from_number)) {
-    fields.splice(present(vars.nombre) ? 1 : 0, 0, ["Teléfono (de la llamada)", call.from_number]);
+  // When the person never gave a number, fall back to the caller ID. If the PBX forwarded
+  // the call with the clinic's own number as caller ID (from == to), that's not the patient's
+  // number, so say it's missing instead of showing a number nobody should call back.
+  if (!present(vars.telefono)) {
+    const callerId = present(call.from_number) && call.from_number !== call.to_number ? call.from_number : null;
+    fields.splice(present(vars.nombre) ? 1 : 0, 0,
+      callerId ? ["Teléfono (de la llamada)", callerId] : ["Teléfono", "No facilitado"]);
   }
 
   const gestion = vars.tipo_gestion || analysis.tipo_gestion;
